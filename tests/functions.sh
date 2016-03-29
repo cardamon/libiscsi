@@ -9,10 +9,16 @@ IQNTARGET=iqn.libiscsi.unittest.target
 IQNINITIATOR=iqn.libiscsi.unittest.initiator
 TGTURL=iscsi://${TGTPORTAL}/${IQNTARGET}/1
 
+ubuntu_shutdown_workaround() {
+    rm -f /var/run/tgtd* && killall -9 tgtd
+    service tgt stop
+}
+
 start_target() {
     # in case we have one still running from a previous run
     ${TGTADM} --op delete --force --mode target --tid 1 2>/dev/null
-    ${TGTADM} --op delete --mode system 2>/dev/null
+    #${TGTADM} --op delete --mode system 2>/dev/null
+    ubuntu_shutdown_workaround
     # Setup target
     echo "Starting iSCSI target"
     ${TGTD} --iscsi portal=${TGTPORTAL},${1}
@@ -26,7 +32,8 @@ shutdown_target() {
     # Remove target
     echo "Shutting down iSCSI target"
     ${TGTADM} --op delete --force --mode target --tid 1
-    ${TGTADM} --op delete --mode system
+    #${TGTADM} --op delete --mode system
+    ubuntu_shutdown_workaround
 }
 
 create_lun() {
